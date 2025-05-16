@@ -17,17 +17,29 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,54 +52,12 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBJwiI4p2v_y4cpAvSzA1OpMqfNf1M_Ero',
-    appId: '1:906889057538:web:463719e72afb8ca06a1e1b',
-    messagingSenderId: '906889057538',
-    projectId: 'qurbanqu-446b0',
-    authDomain: 'qurbanqu-446b0.firebaseapp.com',
-    databaseURL: 'https://qurbanqu-446b0-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'qurbanqu-446b0.firebasestorage.app',
-    measurementId: 'G-6STRHT20NY',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBfoBPYgMA-ipdP4cuZRYj7YMdURteSmxs',
-    appId: '1:906889057538:android:d6a7dfece3cccc3a6a1e1b',
+    appId: '1:906889057538:android:b14f8e41f89e802a6a1e1b',
     messagingSenderId: '906889057538',
     projectId: 'qurbanqu-446b0',
     databaseURL: 'https://qurbanqu-446b0-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'qurbanqu-446b0.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDU7XZLrXzz79ziPGv7URrdT5P6wIwp5tE',
-    appId: '1:906889057538:ios:f1aa9ff1a669695d6a1e1b',
-    messagingSenderId: '906889057538',
-    projectId: 'qurbanqu-446b0',
-    databaseURL: 'https://qurbanqu-446b0-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'qurbanqu-446b0.firebasestorage.app',
-    iosBundleId: 'com.example.qurbanqu',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDU7XZLrXzz79ziPGv7URrdT5P6wIwp5tE',
-    appId: '1:906889057538:ios:f1aa9ff1a669695d6a1e1b',
-    messagingSenderId: '906889057538',
-    projectId: 'qurbanqu-446b0',
-    databaseURL: 'https://qurbanqu-446b0-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'qurbanqu-446b0.firebasestorage.app',
-    iosBundleId: 'com.example.qurbanqu',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBJwiI4p2v_y4cpAvSzA1OpMqfNf1M_Ero',
-    appId: '1:906889057538:web:c64e51048a7a68276a1e1b',
-    messagingSenderId: '906889057538',
-    projectId: 'qurbanqu-446b0',
-    authDomain: 'qurbanqu-446b0.firebaseapp.com',
-    databaseURL: 'https://qurbanqu-446b0-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'qurbanqu-446b0.firebasestorage.app',
-    measurementId: 'G-7K41MEVB5P',
   );
 }

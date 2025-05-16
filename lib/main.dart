@@ -1,16 +1,16 @@
 // lib/main.dart
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
-import 'services/auth_service.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/user/home_screen.dart';
-import 'screens/admin/admin_dashboard.dart';
-import 'constants/colors.dart';
-
-// lib/main.dart
+import 'package:qurbanqu/core/config/app_colors.dart';
+import 'package:qurbanqu/firebase_options.dart';
+import 'package:qurbanqu/presentation/admin/pages/admin_dashboard.dart';
+import 'package:qurbanqu/presentation/auth/pages/login_screen.dart';
+import 'package:qurbanqu/presentation/home/pages/home_screen.dart';
+// import 'package:qurbanqu/presentation/product/pages/product_seeder.dart'; // Mungkin tidak diperlukan lagi jika product_seeder hanya untuk sekali jalan
+import 'package:qurbanqu/service/auth_service.dart';
+import 'package:qurbanqu/service/product_service.dart'; // Import ProductService
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,8 +23,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider<AuthService>(
-      create: (_) => AuthService(),
+    return MultiProvider(
+      // Gunakan MultiProvider jika ada lebih dari satu service
+      providers: [
+        Provider<AuthService>(create: (_) => AuthService()),
+        Provider<ProductService>(
+          create: (_) => ProductService(),
+        ), // Tambahkan ProductService di sini
+      ],
       child: MaterialApp(
         title: 'QurbanQu',
         debugShowCheckedModeBanner: false,
@@ -61,7 +67,7 @@ class AuthWrapper extends StatelessWidget {
     final authService = Provider.of<AuthService>(context);
 
     return StreamBuilder(
-      stream: authService.authStateChanges,
+      stream: authService.authStateChanges(),
       builder: (context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           final user = snapshot.data;
