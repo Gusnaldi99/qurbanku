@@ -7,14 +7,15 @@ import 'package:qurbanqu/core/config/styles.dart';
 import 'package:qurbanqu/model/order_model.dart'; // Sudah termasuk PopulatedOrderModel
 import 'package:qurbanqu/service/order_service.dart'; // DIPERLUKAN
 
-class OrderHistoryScreen extends StatefulWidget {
-  const OrderHistoryScreen({Key? key}) : super(key: key);
+class OrderHistoryAdminScreen extends StatefulWidget {
+  const OrderHistoryAdminScreen({Key? key}) : super(key: key);
 
   @override
-  State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+  State<OrderHistoryAdminScreen> createState() =>
+      _OrderHistoryAdminScreenState();
 }
 
-class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+class _OrderHistoryAdminScreenState extends State<OrderHistoryAdminScreen> {
   bool _isLoading = true;
   // Ubah tipe list menjadi List<PopulatedOrderModel>
   List<PopulatedOrderModel> _populatedOrderList = [];

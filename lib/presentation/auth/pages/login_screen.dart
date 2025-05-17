@@ -4,6 +4,7 @@ import 'package:qurbanqu/common/custom_button.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
 import 'package:qurbanqu/presentation/admin/pages/admin_dashboard.dart';
+import 'package:qurbanqu/presentation/admin/pages/admin_dashboard_screen.dart';
 import 'package:qurbanqu/presentation/auth/pages/register_screen.dart';
 import 'package:qurbanqu/presentation/home/pages/home_screen.dart';
 import 'package:qurbanqu/service/auth_service.dart';
@@ -22,6 +23,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = "admin11@gmail.com";
+    _passwordController.text = "12345678";
+  }
 
   @override
   void dispose() {
@@ -56,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Navigate to admin dashboard
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            MaterialPageRoute(builder: (_) => AdminDashboardScreen()),
           );
         } else {
           // Navigate to user home

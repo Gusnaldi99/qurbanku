@@ -5,7 +5,6 @@ class ProductModel {
   final String deskripsi;
   final double harga;
   final double berat;
-  final int stok;
   final String gambar;
 
   ProductModel({
@@ -15,7 +14,6 @@ class ProductModel {
     required this.deskripsi,
     required this.harga,
     required this.berat,
-    required this.stok,
     required this.gambar,
   });
 
@@ -27,7 +25,6 @@ class ProductModel {
       deskripsi: json['deskripsi'] as String,
       harga: (json['harga'] as num).toDouble(),
       berat: (json['berat'] as num).toDouble(),
-      stok: json['stok'] as int,
       gambar: json['gambar'] as String,
     );
   }
@@ -39,7 +36,6 @@ class ProductModel {
       'deskripsi': deskripsi,
       'harga': harga,
       'berat': berat,
-      'stok': stok,
       'gambar': gambar,
     };
   }

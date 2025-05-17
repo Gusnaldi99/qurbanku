@@ -37,13 +37,13 @@ class ProductCard extends StatelessWidget {
               child: Image.network(
                 product.gambar.isNotEmpty
                     ? product.gambar
-                    : 'https://via.placeholder.com/400x200?text=Hewan+Product',
+                    : 'https://ditjenpkh.pertanian.go.id/storage/photos/shares/konten/berita/SapiBalii.jpeg',
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Image.network(
-                    'https://via.placeholder.com/400x200?text=Tidak+Ada+Gambar',
+                    'https://ditjenpkh.pertanian.go.id/storage/photos/shares/konten/berita/SapiBalii.jpeg',
                     height: 150,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -87,30 +87,6 @@ class ProductCard extends StatelessWidget {
                         style: AppStyles.bodyTextSmall,
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Status Stok
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          product.stok > 0
-                              ? AppColors.secondary.withOpacity(0.2)
-                              : Colors.red.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      product.stok > 0 ? 'Stok: ${product.stok}' : 'Stok Habis',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            product.stok > 0 ? AppColors.primary : Colors.red,
-                      ),
-                    ),
                   ),
                 ],
               ),

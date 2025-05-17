@@ -284,21 +284,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
-                                                Text(
-                                                  'Stok: ${Product.stok} ekor',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color:
-                                                        Product.stok < 5
-                                                            ? Colors.red
-                                                            : Colors.black,
-                                                    fontWeight:
-                                                        Product.stok < 5
-                                                            ? FontWeight.bold
-                                                            : FontWeight.normal,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
 
                                                 // Buttons
                                                 Row(

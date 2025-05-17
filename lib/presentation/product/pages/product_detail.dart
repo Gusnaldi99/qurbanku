@@ -1,4 +1,5 @@
 // lib/screens/user/product_detail_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,8 @@ import 'package:qurbanqu/common/custom_button.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
 import 'package:qurbanqu/model/product_model.dart';
+import 'package:qurbanqu/presentation/payment/pages/payment_screen.dart';
+import 'package:qurbanqu/service/order_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final ProductModel product;
@@ -22,18 +25,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isLoading = false;
 
   void _incrementQuantity() {
-    if (_quantity < widget.product.stok) {
-      setState(() {
-        _quantity++;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Stok tidak mencukupi'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    setState(() {
+      _quantity++;
+    });
   }
 
   void _decrementQuantity() {
@@ -44,52 +38,130 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  final OrderService _orderService = OrderService();
+
   Future<void> _addToCart() async {
+    // Cek apakah user sudah login
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Silakan login terlebih dahulu untuk melakukan pemesanan',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      // Tambahkan navigasi ke halaman login jika perlu
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    // Simulasi proses checkout
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Hitung total harga berdasarkan quantity
+      final totalHarga = widget.product.harga * _quantity;
 
-    if (!mounted) return;
+      // Tambahkan pesanan ke Firestore
+      final orderId = await _orderService.addOrder(
+        hewanId: widget.product.id,
+        jumlah: _quantity,
+        totalHarga: totalHarga,
+        // fotoBuktiTransfer ditambahkan nanti
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (!mounted) return;
 
-    // Tampilkan dialog sukses
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Pesanan Berhasil'),
-            content: const Text(
-              'Hewan product telah ditambahkan ke keranjang Anda. Silakan lanjutkan ke pembayaran.',
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Tampilkan dialog sukses
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Pesanan Berhasil'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hewan berhasil dipesan. Silakan lanjutkan ke pembayaran.',
+                  ),
+                  const SizedBox(height: 12),
+                  // Detail Pesanan
+                  Text(
+                    'Detail Pesanan:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildOrderDetailItem('Hewan', widget.product.nama),
+                  _buildOrderDetailItem('Jumlah', '$_quantity ekor'),
+                  _buildOrderDetailItem(
+                    'Total',
+                    NumberFormat.currency(
+                      locale: 'id_ID',
+                      symbol: 'Rp',
+                      decimalDigits: 0,
+                    ).format(totalHarga),
+                  ),
+                  _buildOrderDetailItem('Status', 'Menunggu Pembayaran'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context); // Kembali ke halaman utama
+                  },
+                  child: const Text('Kembali ke Beranda'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // Di sini akan navigasi ke halaman pembayaran
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(orderId: orderId),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Lanjut ke Pembayaran'),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context); // Kembali ke halaman utama
-                },
-                child: const Text('Kembali ke Beranda'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Di sini akan navigasi ke halaman checkout
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Fitur checkout akan segera hadir!'),
-                      backgroundColor: AppColors.primary,
-                    ),
-                  );
-                },
-                child: const Text('Lanjut ke Pembayaran'),
-              ),
-            ],
-          ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membuat pesanan: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildOrderDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 
@@ -202,13 +274,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           value: '${widget.product.berat} kg',
                         ),
                       ),
-                      Expanded(
-                        child: _buildSpecItem(
-                          icon: Icons.inventory,
-                          title: 'Stok',
-                          value: '${widget.product.stok} ekor',
-                        ),
-                      ),
+
                       Expanded(
                         child: _buildSpecItem(
                           icon: Icons.verified,
@@ -254,11 +320,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       _buildQuantityButton(
                         icon: Icons.add,
                         onPressed: _incrementQuantity,
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Stok: ${widget.product.stok}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),

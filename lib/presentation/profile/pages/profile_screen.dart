@@ -250,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: _buildStatItem(
                 count: '2',
-                title: 'Selesai',
+                title: 'success',
                 icon: Icons.check_circle,
               ),
             ),

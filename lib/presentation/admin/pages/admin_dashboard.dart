@@ -44,7 +44,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           'hewan': 'Sapi Limosin',
           'tanggal': DateTime.now().subtract(const Duration(hours: 3)),
           'total': 18500000,
-          'status': 'menunggu',
+          'status': 'pending',
         },
         {
           'id': 'ORD002',
@@ -52,7 +52,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           'hewan': 'Kambing Etawa',
           'tanggal': DateTime.now().subtract(const Duration(hours: 5)),
           'total': 2800000,
-          'status': 'diproses',
+          'status': 'failed',
         },
         {
           'id': 'ORD003',
@@ -60,7 +60,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           'hewan': 'Domba Merino',
           'tanggal': DateTime.now().subtract(const Duration(hours: 8)),
           'total': 3500000,
-          'status': 'selesai',
+          'status': 'success',
         },
       ],
     };
@@ -112,11 +112,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'menunggu':
+      case 'pending':
         return Colors.orange;
-      case 'diproses':
-        return Colors.blue;
-      case 'selesai':
+      case 'failed':
+        return Colors.red;
+      case 'success':
         return Colors.green;
       default:
         return Colors.grey;
@@ -205,7 +205,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildStatCard(
-                              title: 'Selesai',
+                              title: 'success',
                               value:
                                   _dashboardData['pesananSelesai'].toString(),
                               icon: Icons.check_circle,

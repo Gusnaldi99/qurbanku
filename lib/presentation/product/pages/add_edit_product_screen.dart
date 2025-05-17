@@ -35,7 +35,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _deskripsiController.text = widget.Product!.deskripsi;
       _hargaController.text = widget.Product!.harga.toString();
       _beratController.text = widget.Product!.berat.toString();
-      _stokController.text = widget.Product!.stok.toString();
       _gambarController.text = widget.Product!.gambar;
       _selectedJenis = widget.Product!.jenis;
     }
@@ -47,7 +46,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _deskripsiController.dispose();
     _hargaController.dispose();
     _beratController.dispose();
-    _stokController.dispose();
     _gambarController.dispose();
     super.dispose();
   }
@@ -245,31 +243,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 },
               ),
               const SizedBox(height: 16),
-
-              // Stok
-              TextFormField(
-                controller: _stokController,
-                decoration: const InputDecoration(
-                  labelText: 'Stok (ekor)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.inventory),
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Stok tidak boleh kosong';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Stok harus berupa angka';
-                  }
-                  if (int.parse(value) < 0) {
-                    return 'Stok tidak boleh negatif';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
 
               // Gambar
               const Text('Gambar', style: AppStyles.heading2),
