@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:qurbanqu/common/custom_button.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
-import 'package:qurbanqu/presentation/admin/pages/admin_dashboard.dart';
+// import 'package:qurbanqu/presentation/admin/pages/admin_dashboard.dart';
 import 'package:qurbanqu/presentation/admin/pages/admin_dashboard_screen.dart';
 import 'package:qurbanqu/presentation/auth/pages/register_screen.dart';
 import 'package:qurbanqu/presentation/home/pages/home_screen.dart';
@@ -27,8 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController.text = "admin11@gmail.com";
-    _passwordController.text = "12345678";
+    // _emailController.text = "admin11@gmail.com";
+    // _passwordController.text = "12345678";
   }
 
   @override
@@ -99,11 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo dan Judul
-                  const Icon(
-                    Icons.pets, // Placeholder untuk logo
-                    size: 80,
-                    color: AppColors.primary,
-                  ),
+                  Image.asset('assets/images/logo.jpg', height: 300),
                   const SizedBox(height: 16),
                   Text(
                     'QurbanQu',

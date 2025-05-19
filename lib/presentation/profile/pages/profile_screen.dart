@@ -1,9 +1,12 @@
 // lib/screens/user/profile_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:qurbanqu/common/custom_button.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
+import 'package:qurbanqu/model/user_model.dart';
 import 'package:qurbanqu/presentation/auth/pages/login_screen.dart';
+import 'package:qurbanqu/service/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -16,18 +19,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   bool _isEditing = false;
 
-  // Controller untuk form edit
   final _namaController = TextEditingController();
   final _teleponController = TextEditingController();
   final _alamatController = TextEditingController();
 
-  // Data dummy user
-  Map<String, dynamic> _userData = {
-    'nama': 'Ahmad Rizky',
-    'email': 'ahmad@example.com',
-    'telepon': '081234567890',
-    'alamat': 'Jl. Contoh No. 123, Jakarta Selatan',
-  };
+  UserModel? _currentUser;
 
   @override
   void initState() {
@@ -44,18 +40,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadData() async {
-    // Simulasi pemuatan data dari database
-    await Future.delayed(const Duration(seconds: 1));
+    final authService = Provider.of<AuthService>(context, listen: false);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
+    try {
+      UserModel? user = await authService.getCurrentUserModel();
 
-        // Isi controller dengan data user
-        _namaController.text = _userData['nama'] ?? '';
-        _teleponController.text = _userData['telepon'] ?? '';
-        _alamatController.text = _userData['alamat'] ?? '';
-      });
+      if (user != null && mounted) {
+        setState(() {
+          _currentUser = user;
+          _namaController.text = user.nama;
+          _teleponController.text = user.telepon;
+          _alamatController.text = user.alamat;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error memuat data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memuat data profil'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -66,7 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    // Validasi data
     if (_namaController.text.isEmpty ||
         _teleponController.text.isEmpty ||
         _alamatController.text.isEmpty) {
@@ -83,33 +88,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _isLoading = true;
     });
 
-    // Simulasi menyimpan data ke database
-    await Future.delayed(const Duration(seconds: 2));
+    final authService = Provider.of<AuthService>(context, listen: false);
 
-    // Update data user
-    setState(() {
-      _userData = {
-        'nama': _namaController.text,
-        'email': _userData['email'], // Email tidak bisa diganti
-        'telepon': _teleponController.text,
-        'alamat': _alamatController.text,
-      };
-      _isLoading = false;
-      _isEditing = false;
-    });
+    try {
+      if (_currentUser != null) {
+        await authService.updateUserProfile(
+          userId: _currentUser!.id,
+          nama: _namaController.text,
+          telepon: _teleponController.text,
+          alamat: _alamatController.text,
+        );
 
-    if (!mounted) return;
+        setState(() {
+          _currentUser = _currentUser!.copyWith(
+            nama: _namaController.text,
+            telepon: _teleponController.text,
+            alamat: _alamatController.text,
+          );
+        });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil berhasil diperbarui'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profil berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan profil: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isEditing = false;
+        });
+      }
+    }
   }
 
   Future<void> _logout() async {
-    // Konfirmasi logout
     final result = await showDialog<bool>(
       context: context,
       builder:
@@ -131,12 +153,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (result == true) {
-      // Proses logout
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (!mounted) return;
-
-      // Kembali ke halaman login
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.signOut();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -166,7 +184,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Foto Profil
                     Center(
                       child: Column(
                         children: [
@@ -182,25 +199,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 12),
                           if (!_isEditing)
                             Text(
-                              _userData['nama'] ?? '',
+                              _currentUser?.nama ?? 'Nama Pengguna',
                               style: AppStyles.heading1,
                             ),
                           const SizedBox(height: 4),
                           Text(
-                            _userData['email'] ?? '',
-                            style: AppStyles.bodyTextSmall,
+                            _currentUser?.email ??
+                                'Email Pengguna', // Diperbaiki dari nama ke email
+                            style: AppStyles.bodyText,
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Form atau Info Detail
                     if (_isEditing) _buildEditForm() else _buildProfileInfo(),
-
                     const SizedBox(height: 32),
-
-                    // Tombol Logout
                     if (!_isEditing)
                       CustomButton(
                         text: 'Logout',
@@ -224,18 +237,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildInfoItem(
           icon: Icons.phone,
           title: 'Nomor Telepon',
-          value: _userData['telepon'] ?? '-',
+          value: _currentUser?.telepon ?? '-',
         ),
         const Divider(),
         _buildInfoItem(
           icon: Icons.home,
           title: 'Alamat',
-          value: _userData['alamat'] ?? '-',
+          value: _currentUser?.alamat ?? '-',
         ),
         const Divider(),
         const SizedBox(height: 24),
-
-        // Statistics
         const Text('Statistik', style: AppStyles.heading2),
         const SizedBox(height: 16),
         Row(
@@ -250,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: _buildStatItem(
                 count: '2',
-                title: 'success',
+                title: 'Berhasil',
                 icon: Icons.check_circle,
               ),
             ),
@@ -274,8 +285,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           const Text('Edit Profil', style: AppStyles.heading2),
           const SizedBox(height: 16),
-
-          // Nama
           TextFormField(
             controller: _namaController,
             decoration: const InputDecoration(
@@ -285,10 +294,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Email (disabled)
           TextFormField(
-            initialValue: _userData['email'],
+            initialValue: _currentUser?.email,
             enabled: false,
             decoration: const InputDecoration(
               labelText: 'Email',
@@ -300,8 +307,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Telepon
           TextFormField(
             controller: _teleponController,
             keyboardType: TextInputType.phone,
@@ -312,8 +317,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Alamat
           TextFormField(
             controller: _alamatController,
             maxLines: 3,
@@ -325,8 +328,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Buttons
           Row(
             children: [
               Expanded(

@@ -63,6 +63,25 @@ class AuthService {
     }
   }
 
+  // Tambahkan di class AuthService
+  Future<void> updateUserProfile({
+    required String userId,
+    required String nama,
+    required String telepon,
+    required String alamat,
+  }) async {
+    try {
+      await _firestore.collection('Users').doc(userId).update({
+        'nama': nama,
+        'telepon': telepon,
+        'alamat': alamat,
+      });
+    } catch (e) {
+      print('Error update profil: $e');
+      throw e;
+    }
+  }
+
   Future<UserCredential?> signInWithEmailAndPassword({
     required String email,
     required String password,

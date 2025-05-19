@@ -35,6 +35,12 @@ class UserModel {
       role: map['role'] ?? userRoleToString(UserRole.user),
     );
   }
+
+  UserModel? copyWith({
+    required String nama,
+    required String telepon,
+    required String alamat,
+  }) {}
 }
 
 enum UserRole { user, admin }
