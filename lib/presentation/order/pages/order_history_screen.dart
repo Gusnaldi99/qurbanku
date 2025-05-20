@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart'; // TAMBAHKAN IMPORT INI
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
 import 'package:qurbanqu/model/order_model.dart'; // Sudah termasuk PopulatedOrderModel
+import 'package:qurbanqu/presentation/order/pages/order_history_detail_screen.dart';
 import 'package:qurbanqu/service/order_service.dart'; // DIPERLUKAN
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -431,13 +432,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                 const SizedBox(width: 8),
                                 ElevatedButton(
                                   onPressed: () {
-                                    // Contoh: Navigasi ke halaman detail pesanan jika ada
-                                    // Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailPage(populatedOrder: populatedOrder)));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Fitur detail pesanan akan segera hadir!',
-                                        ),
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => OrderHistoryDetail(
+                                              populatedOrder: populatedOrder,
+                                            ),
                                       ),
                                     );
                                   },
