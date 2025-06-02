@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/firebase_options.dart';
-import 'package:qurbanqu/presentation/admin/pages/admin_dashboard.dart';
 import 'package:qurbanqu/presentation/admin/pages/admin_dashboard_screen.dart';
-import 'package:qurbanqu/presentation/auth/pages/login_screen.dart';
+import 'package:qurbanqu/presentation/auth/pages/splash_screen.dart';
 import 'package:qurbanqu/presentation/home/pages/home_screen.dart';
 
 import 'package:qurbanqu/service/auth_service.dart';
@@ -77,7 +76,7 @@ class AuthWrapper extends StatelessWidget {
           final user = snapshot.data;
 
           if (user == null) {
-            return const LoginScreen();
+            return const SplashScreen();
           }
 
           return FutureBuilder<bool>(

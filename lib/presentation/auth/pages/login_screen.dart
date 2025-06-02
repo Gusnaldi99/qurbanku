@@ -95,11 +95,15 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                // mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo dan Judul
-                  Image.asset('assets/images/logo.jpg', height: 300),
+                  Image.asset(
+                    'assets/images/logo.jpg',
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'QurbanQu',
