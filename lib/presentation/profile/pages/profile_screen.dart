@@ -1,4 +1,3 @@
-// lib/screens/user/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qurbanqu/common/custom_button.dart';
@@ -99,13 +98,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           alamat: _alamatController.text,
         );
 
-        setState(() {
-          _currentUser = _currentUser!.copyWith(
-            nama: _namaController.text,
-            telepon: _teleponController.text,
-            alamat: _alamatController.text,
-          );
-        });
+        // Ambil data terbaru dari Firestore setelah update
+        UserModel? updatedUser = await authService.getCurrentUserModel();
+
+        if (mounted && updatedUser != null) {
+          setState(() {
+            _currentUser = updatedUser;
+            _namaController.text = updatedUser.nama;
+            _teleponController.text = updatedUser.telepon;
+            _alamatController.text = updatedUser.alamat;
+          });
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

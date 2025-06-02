@@ -1,4 +1,3 @@
-// lib/models/order_model.dart
 import 'package:qurbanqu/model/product_model.dart';
 import 'package:qurbanqu/model/user_model.dart';
 
