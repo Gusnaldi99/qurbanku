@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/main.dart'; // Pastikan supabase client diekspor atau diakses dari sini
+import 'package:qurbanqu/presentation/home/pages/home_screen.dart';
 import 'package:qurbanqu/presentation/order/pages/order_history_screen.dart';
 import 'package:qurbanqu/service/order_service.dart';
 import 'package:qurbanqu/model/order_model.dart';
@@ -160,7 +161,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => OrderHistoryScreen()),
+                      MaterialPageRoute(builder: (_) => HomeScreen()),
                     );
                   },
                   child: const Text('OK'),

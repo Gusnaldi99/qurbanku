@@ -115,19 +115,21 @@ class OrderService {
     }
   }
 
-  Future<void> updateOrderStatusToSuccessOrFailed(String orderId, bool isSuccess) async {
-  try {
-    final String newStatus = isSuccess ? 'success' : 'failed';
-    await _firestore.collection(_collectionName).doc(orderId).update({
-      'status': newStatus,
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-    });
-  } catch (e) {
-    print('Error memperbarui status sukses/gagal pesanan: $e');
-    throw Exception('Gagal memperbarui status pesanan');
+  Future<void> updateOrderStatusToSuccessOrFailed(
+    String orderId,
+    bool isSuccess,
+  ) async {
+    try {
+      final String newStatus = isSuccess ? 'success' : 'failed';
+      await _firestore.collection(_collectionName).doc(orderId).update({
+        'status': newStatus,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      print('Error memperbarui status sukses/gagal pesanan: $e');
+      throw Exception('Gagal memperbarui status pesanan');
+    }
   }
-}
-
 
   // Memperbarui bukti transfer dan status pesanan
   Future<void> updateOrderAfterPayment(
@@ -153,8 +155,8 @@ class OrderService {
           await _firestore
               .collection(_collectionName)
               .where('user_id', isEqualTo: userId)
+              .where('status', isNotEqualTo: 'dibatalkan')
               .get();
-
       List<OrderModel> orderList =
           snapshot.docs.map((doc) {
             return OrderModel.fromMap(
@@ -215,6 +217,36 @@ class OrderService {
     } catch (e) {
       print('Error memperbarui status pesanan: $e');
       throw Exception('Gagal memperbarui status pesanan');
+    }
+  }
+
+  // metode untuk membatalkan pesanan
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      // Update status pesanan menjadi 'cancelled' atau 'dibatalkan'
+      await _firestore.collection('Orders').doc(orderId).update({
+        'status': 'dibatalkan',
+        'cancelledAt': FieldValue.serverTimestamp(), // Timestamp pembatalan
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('Pesanan $orderId berhasil dibatalkan');
+    } catch (e) {
+      print('Error membatalkan pesanan: $e');
+      throw Exception('Gagal membatalkan pesanan: $e');
+    }
+  }
+
+  // menghapus pesanan sepenuhnya dari database
+  Future<void> deleteOrder(String orderId) async {
+    try {
+      // Hapus dokumen pesanan dari koleksi Orders
+      await _firestore.collection(_collectionName).doc(orderId).delete();
+
+      print('Pesanan $orderId berhasil dihapus permanen');
+    } catch (e) {
+      print('Error menghapus pesanan: $e');
+      throw Exception('Gagal menghapus pesanan: $e');
     }
   }
 }

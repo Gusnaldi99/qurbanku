@@ -3,24 +3,24 @@ import 'package:intl/intl.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
 import 'package:qurbanqu/presentation/admin/pages/admin_kelola_screen.dart';
+import 'package:qurbanqu/presentation/admin/pages/admin_order_screen.dart';
 import 'package:qurbanqu/presentation/auth/pages/login_screen.dart';
-import 'package:qurbanqu/presentation/product/pages/products_screen.dart';
-import 'package:qurbanqu/service/order_service.dart'; // Import OrderService
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth untuk logout
+import 'package:qurbanqu/service/order_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
+
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final OrderService _orderService = OrderService(); // Instance OrderService
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Instance FirebaseAuth
-
+  final OrderService _orderService = OrderService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = true;
+  bool _hasError = false;
 
-  // Data dashboard yang akan diisi dari Firestore
   final Map<String, dynamic> _dashboardData = {
     'totalPesanan': 0,
     'totalPendapatan': 0,
@@ -39,28 +39,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _loadDashboardData() async {
     setState(() {
       _isLoading = true;
+      _hasError = false;
     });
 
     try {
-      // Mengambil semua pesanan yang sudah di-populate dengan user dan product
       final orders = await _orderService.getAllOrders();
 
-      // Menghitung statistik
       int totalPesanan = orders.length;
       double totalPendapatan = 0;
       int pesananBaru = 0;
       int pesananDiproses = 0;
       int pesananSelesai = 0;
-
-      // List untuk menyimpan pesanan terbaru yang akan ditampilkan
       List<Map<String, dynamic>> recentOrders = [];
 
-      // Mengolah data pesanan untuk dashboard
       for (var orderData in orders) {
-        // Menghitung total pendapatan
         totalPendapatan += orderData.order.totalHarga;
 
-        // Menghitung status pesanan
         switch (orderData.order.status.toLowerCase()) {
           case 'menunggu pembayaran':
           case 'pending':
@@ -76,7 +70,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             break;
         }
 
-        // Menyiapkan data untuk pesanan terbaru (maksimal 5 pesanan)
         if (recentOrders.length < 5) {
           recentOrders.add({
             'id': orderData.order.id,
@@ -89,13 +82,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         }
       }
 
-      // Mengurutkan pesanan terbaru berdasarkan tanggal (terbaru di atas)
       recentOrders.sort(
         (a, b) =>
             (b['tanggal'] as DateTime).compareTo(a['tanggal'] as DateTime),
       );
 
-      // Memperbarui data dashboard
       if (mounted) {
         setState(() {
           _dashboardData['totalPesanan'] = totalPesanan;
@@ -112,6 +103,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _hasError = true;
         });
         ScaffoldMessenger.of(
           context,
@@ -121,7 +113,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Future<void> _logout() async {
-    // Konfirmasi logout
     final result = await showDialog<bool>(
       context: context,
       builder:
@@ -144,11 +135,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     if (result == true) {
       try {
-        // Proses logout dari Firebase
         await _auth.signOut();
-
         if (!mounted) return;
-        // Kembali ke halaman login
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -163,11 +151,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  // Fungsi untuk mengubah status pesanan
   Future<void> _processOrder(String orderId, String newStatus) async {
     try {
       await _orderService.updateOrderStatus(orderId, newStatus);
-      // Muat ulang data setelah memperbarui status
       await _loadDashboardData();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +169,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Color _getStatusColor(String status) {
     status = status.toLowerCase();
-    if (status.contains('pending') || status == 'pending') {
+    if (status.contains('pending')) {
       return Colors.orange;
     } else if (status.contains('gagal') || status == 'failed') {
       return Colors.red;
@@ -191,9 +177,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return Colors.green;
     } else if (status.contains('proses')) {
       return Colors.blue;
-    } else {
-      return Colors.grey;
     }
+    return Colors.grey;
   }
 
   @override
@@ -215,6 +200,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
+              : _hasError
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Gagal memuat data'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadDashboardData,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              )
               : RefreshIndicator(
                 onRefresh: _loadDashboardData,
                 child: SingleChildScrollView(
@@ -222,7 +221,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Greeting
                       Text('Selamat Datang, Admin!', style: AppStyles.heading1),
                       Text(
                         'Berikut adalah ringkasan data QurbanQu',
@@ -230,7 +228,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Stats Cards
+                      // Statistik Utama
                       Row(
                         children: [
                           Expanded(
@@ -254,9 +252,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 12),
-
                       Row(
                         children: [
                           Expanded(
@@ -289,10 +285,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 24),
 
-                      // Recent Orders
+                      // Pesanan Terbaru
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -302,12 +297,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // Navigate to orders screen
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Fitur daftar pesanan akan segera hadir!',
-                                  ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AdminOrdersScreen(),
                                 ),
                               );
                             },
@@ -315,10 +308,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 12),
-
-                      // Daftar pesanan terbaru
                       if ((_dashboardData['recentOrders'] as List).isEmpty)
                         const Center(
                           child: Padding(
@@ -466,10 +456,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       TextButton(
-                                        onPressed: () {
-                                          // Tampilkan detail pesanan
-                                          _showOrderDetails(context, order);
-                                        },
+                                        onPressed:
+                                            () => _showOrderDetails(
+                                              context,
+                                              order,
+                                            ),
                                         child: const Text('Detail'),
                                       ),
                                       const SizedBox(width: 8),
@@ -528,7 +519,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // Fungsi untuk menampilkan detail pesanan
   void _showOrderDetails(BuildContext context, Map<String, dynamic> order) {
     showDialog(
       context: context,
@@ -567,7 +557,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // Widget untuk menampilkan detail baris
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),

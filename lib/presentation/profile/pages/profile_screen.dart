@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:qurbanqu/common/custom_button.dart';
 import 'package:qurbanqu/core/config/app_colors.dart';
 import 'package:qurbanqu/core/config/styles.dart';
+import 'package:qurbanqu/model/order_model.dart';
 import 'package:qurbanqu/model/user_model.dart';
 import 'package:qurbanqu/presentation/auth/pages/login_screen.dart';
 import 'package:qurbanqu/service/auth_service.dart';
+import 'package:qurbanqu/service/order_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -22,12 +24,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _teleponController = TextEditingController();
   final _alamatController = TextEditingController();
 
+  int _totalOrders = 0;
+  int _pendingOrders = 0;
+  int _inProcessOrders = 0;
+  int _completedOrders = 0;
+
+  final OrderService _orderService = OrderService();
+
   UserModel? _currentUser;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data ketika kembali ke screen ini
+    if (ModalRoute.of(context)!.isCurrent) {
+      _loadData();
+    }
   }
 
   @override
@@ -41,10 +59,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadData() async {
     final authService = Provider.of<AuthService>(context, listen: false);
 
+    setState(() => _isLoading = true);
+
     try {
       UserModel? user = await authService.getCurrentUserModel();
 
       if (user != null && mounted) {
+        // Get user orders
+        List<OrderModel> userOrders = await _orderService.getOrdersByUserId(
+          user.id,
+        );
+
+        // Calculate statistics
+        _totalOrders = userOrders.length;
+        _pendingOrders =
+            userOrders
+                .where(
+                  (o) =>
+                      o.status.toLowerCase() == 'pending' ||
+                      o.status.toLowerCase() == 'menunggu pembayaran',
+                )
+                .length;
+
+        _inProcessOrders =
+            userOrders
+                .where(
+                  (o) =>
+                      o.status.toLowerCase() == 'diproses' ||
+                      o.status.toLowerCase() == 'processing' ||
+                      o.status.toLowerCase() == 'sedang diproses',
+                )
+                .length;
+
+        _completedOrders =
+            userOrders
+                .where(
+                  (o) =>
+                      o.status.toLowerCase() == 'completed' ||
+                      o.status.toLowerCase() == 'selesai' ||
+                      o.status.toLowerCase() == 'success',
+                )
+                .length;
+
         setState(() {
           _currentUser = user;
           _namaController.text = user.nama;
@@ -54,13 +110,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      print('Error memuat data: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal memuat data profil'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('Error loading data: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load profile data'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -250,29 +309,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const Divider(),
         const SizedBox(height: 24),
-        const Text('Statistik', style: AppStyles.heading2),
+        const Text('Statistik Pesanan', style: AppStyles.heading2),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildStatItem(
-                count: '3',
-                title: 'Pesanan',
-                icon: Icons.shopping_bag,
+                count: '$_totalOrders',
+                title: 'Total Pesanan',
+                icon: Icons.shopping_cart,
               ),
             ),
             Expanded(
               child: _buildStatItem(
-                count: '2',
-                title: 'Berhasil',
+                count: '$_pendingOrders',
+                title: 'Pending',
+                icon: Icons.payment,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatItem(
+                count: '$_inProcessOrders',
+                title: 'Sedang Diproses',
+                icon: Icons.autorenew,
+              ),
+            ),
+            Expanded(
+              child: _buildStatItem(
+                count: '$_completedOrders',
+                title: 'Selesai',
                 icon: Icons.check_circle,
-              ),
-            ),
-            Expanded(
-              child: _buildStatItem(
-                count: '1',
-                title: 'Proses',
-                icon: Icons.pending,
               ),
             ),
           ],

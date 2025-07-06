@@ -84,6 +84,93 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
   }
 
+  // Metode untuk pembatalan pesanan
+  Future<void> _cancelOrder(PopulatedOrderModel populatedOrder) async {
+    // Tampilkan dialog konfirmasi
+    bool? shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Pembatalan'),
+          content: const Text(
+            'Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Ya, Batalkan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Jika user memilih untuk membatalkan
+    if (shouldCancel == true) {
+      try {
+        // Tampilkan loading
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Text('Membatalkan pesanan...'),
+                ],
+              ),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+
+        // Panggil service untuk membatalkan pesanan
+        await _orderService.cancelOrder(populatedOrder.order.id);
+
+        // Hapus dari list lokal
+        if (mounted) {
+          setState(() {
+            _populatedOrderList.removeWhere(
+              (item) => item.order.id == populatedOrder.order.id,
+            );
+          });
+
+          // Tampilkan pesan sukses
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pesanan berhasil dibatalkan'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error membatalkan pesanan: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal membatalkan pesanan: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Color _getStatusColor(String status) {
     // Normalisasi status untuk perbandingan yang lebih andal
     String normalizedStatus = status.toLowerCase();
@@ -105,9 +192,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     String normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
       case 'menunggu pembayaran':
-        return 'Menunggu Pembayaran';
+        return 'Pending';
       case 'pending':
-        return 'Menunggu Pembayaran';
+        return 'Pending';
       case 'diproses':
         return 'Sedang Diproses';
       case 'success':
@@ -403,21 +490,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                // Tombol batalkan hanya muncul jika pesanan bisa dibatalkan
                                 if (order.status.toLowerCase() ==
                                         'menunggu pembayaran' ||
                                     order.status.toLowerCase() == 'pending')
                                   OutlinedButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Fitur pembatalan pesanan akan segera hadir!',
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                    onPressed:
+                                        () => _cancelOrder(populatedOrder),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.redAccent,
                                       side: const BorderSide(
@@ -429,7 +508,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                     ),
                                     child: const Text('Batalkan'),
                                   ),
-                                const SizedBox(width: 8),
+                                if (order.status.toLowerCase() ==
+                                        'menunggu pembayaran' ||
+                                    order.status.toLowerCase() == 'pending')
+                                  const SizedBox(width: 8),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.push(
